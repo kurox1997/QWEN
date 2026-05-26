@@ -1,37 +1,42 @@
 # ============================================================================
-# Qwen-Rapid-AIO Serverless v4 (Multi-stage Build for SageAttention 2.x)
+# Qwen-Rapid-AIO Serverless v5 (Multi-stage + deadsnakes Python 3.12)
 #
-# 課題: runpod/worker-comfyui:5.8.5-base-cuda12.8.1 に nvcc 無し
-# 解決: nvidia/cuda:12.8.1-cudnn-devel で SageAttention をビルド → main stage に COPY
-#
-# 期待効果: RTX 4090 で 60-90 秒/枚
+# 変更点 (v4→v5): Ubuntu 22.04 デフォルトに python3.12 無い問題を deadsnakes PPA で解決
 # ============================================================================
 
 # =============================================================================
-# Stage 1: SageAttention 2.x wheel ビルダー (nvcc 付き devel image)
+# Stage 1: SageAttention 2.x wheel ビルダー (nvcc + Python 3.12)
 # =============================================================================
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04 AS sage-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Python 3.12 + ビルドツール
+# まず PPA 追加に必要な最小ツールをインストール
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.12 python3.12-dev python3.12-venv \
-        python3-pip git build-essential ninja-build curl ca-certificates \
-        software-properties-common \
- && rm -rf /var/lib/apt/lists/* \
- && python3.12 -m pip install --upgrade pip --break-system-packages
+        software-properties-common curl ca-certificates gnupg \
+ && rm -rf /var/lib/apt/lists/*
+
+# deadsnakes PPA を追加 (Python 3.12 を Ubuntu 22.04 で入れるため)
+RUN add-apt-repository -y ppa:deadsnakes/ppa \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+        python3.12 python3.12-dev python3.12-venv python3.12-distutils \
+        git build-essential ninja-build \
+ && rm -rf /var/lib/apt/lists/*
+
+# pip を Python 3.12 用に手動インストール
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
 
 # nvcc 確認 (build時の早期失敗検出)
-RUN nvcc --version
+RUN nvcc --version && python3.12 --version
 
 # main stage と同じ torch を入れる (ABI互換のため必須)
-RUN python3.12 -m pip install --break-system-packages --no-cache-dir \
+RUN python3.12 -m pip install --no-cache-dir \
         torch==2.10.0 \
         --index-url https://download.pytorch.org/whl/cu128
 
-# setuptools 旧版 (SageAttention 公式推奨)
-RUN python3.12 -m pip install --break-system-packages --no-cache-dir \
+# setuptools 旧版 (SageAttention 公式推奨) + ビルド依存
+RUN python3.12 -m pip install --no-cache-dir \
         "setuptools<=75.8.2" wheel packaging ninja
 
 # SageAttention 2.x を wheel としてビルド
