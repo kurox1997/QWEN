@@ -1,27 +1,39 @@
-﻿FROM runpod/worker-comfyui:latest-base
+﻿# syntax=docker/dockerfile:1.7
+# === Qwen-Rapid-AIO Serverless Worker ===
+# ベース：公式 worker-comfyui 5.8.5 / CUDA 12.8.1（cu128環境に整合）
+FROM runpod/worker-comfyui:5.8.5-base-cuda12.8.1
 
-# === カスタムノードインストール（requirements.txtがないのでシンプルに）===
-RUN git clone https://github.com/lrzjason/Comfyui-QwenEditUtils.git /comfyui/custom_nodes/Comfyui-QwenEditUtils
+# === カスタムノード：Comfyui-QwenEditUtils ===
+RUN git clone --depth=1 https://github.com/lrzjason/Comfyui-QwenEditUtils.git \
+      /comfyui/custom_nodes/Comfyui-QwenEditUtils \
+ && if [ -f /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt ]; then \
+      pip install --no-cache-dir -r /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt; \
+    fi
 
 # === 必須ファイルのコピー ===
 COPY extra_model_paths.yaml /comfyui/extra_model_paths.yaml
-COPY workflow_api.json /comfyui/workflow_api.json
+COPY workflow_api.json      /comfyui/workflow_api.json
 
-# === start.sh作成（heredoc使用でparse error回避）===
-RUN cat << 'EOF' > /start.sh
-#!/bin/bash
-echo "=== Qwen-Rapid-AIO Serverless Starting ==="
+# === 起動スクリプトのラップ ===
+# 元の /start.sh を /start_original.sh に退避し、
+# その手前で /workspace シンボリックリンク作成だけを行う薄いラッパを置く。
+# （元 Dockerfile の致命的バグ＝自分自身を exec する無限再帰を解消）
+RUN if [ -f /start.sh ]; then mv /start.sh /start_original.sh; fi \
+ && printf '%s\n' \
+      '#!/bin/bash' \
+      'set -e' \
+      'echo "=== Qwen-Rapid-AIO Serverless Starting ==="' \
+      '' \
+      '# Network Volume を /workspace としても参照できるようにする' \
+      'if [ -d /runpod-volume ] && [ ! -e /workspace ]; then' \
+      '  ln -s /runpod-volume /workspace' \
+      '  echo "Linked /runpod-volume -> /workspace"' \
+      'fi' \
+      '' \
+      '# 元の RunPod 起動スクリプトに制御を渡す' \
+      'exec /start_original.sh "$@"' \
+    > /start.sh \
+ && chmod +x /start.sh
 
-# Network Volumeを/workspaceにリンク
-if [ ! -L /workspace ]; then
-  ln -s /runpod-volume /workspace
-  echo "Linked /runpod-volume -> /workspace"
-fi
-
-# 元のRunPod起動スクリプトを実行
-exec /start.sh
-EOF
-
-RUN chmod +x /start.sh
-
+# 公式イメージの ENTRYPOINT を上書きしないため CMD のみ指定
 CMD ["/start.sh"]
