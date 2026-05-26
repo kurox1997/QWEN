@@ -1,774 +1,115 @@
 {
-  "id": "512f1d30-20e0-4481-83b3-a88bcb911a53",
-  "revision": 0,
-  "last_node_id": 453,
-  "last_link_id": 713,
-  "nodes": [
-    {
-      "id": 433,
-      "type": "EmptyLatentImage",
-      "pos": [
-        4174.803752093727,
-        -564.8365662966969
-      ],
-      "size": [
-        210,
-        106
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "width",
-          "type": "INT",
-          "widget": {
-            "name": "width"
-          },
-          "link": 654
-        },
-        {
-          "name": "height",
-          "type": "INT",
-          "widget": {
-            "name": "height"
-          },
-          "link": 655
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            659
-          ]
-        }
-      ],
-      "title": "Final Image Size",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "EmptyLatentImage"
-      },
-      "widgets_values": [
-        600,
-        800,
-        1
-      ]
+  "1": {
+    "inputs": {
+      "ckpt_name": "Qwen-Rapid-AIO-NSFW-v23.safetensors"
     },
-    {
-      "id": 434,
-      "type": "KSampler",
-      "pos": [
-        4359.596546827723,
-        -354.8363031741571
-      ],
-      "size": [
-        210.40773971250496,
-        262
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 710
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 657
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 658
-        },
-        {
-          "name": "latent_image",
-          "type": "LATENT",
-          "link": 659
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            660
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "KSampler"
-      },
-      "widgets_values": [
-        19,
-        "fixed",
-        6,
-        1,
-        "euler_ancestral",
-        "simple",
-        1
-      ]
-    },
-    {
-      "id": 438,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        4620.712920151333,
-        -702.1427318611485
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 668
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            661
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "QWEN_breastslider.safetensors",
-        -2
-      ]
-    },
-    {
-      "id": 432,
-      "type": "GetImageSize",
-      "pos": [
-        4429.430349581993,
-        -568.0597245436402
-      ],
-      "size": [
-        140,
-        124.00000000000011
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 698
-        }
-      ],
-      "outputs": [
-        {
-          "name": "width",
-          "type": "INT",
-          "links": [
-            654
-          ]
-        },
-        {
-          "name": "height",
-          "type": "INT",
-          "links": [
-            655
-          ]
-        },
-        {
-          "name": "batch_size",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "GetImageSize"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 435,
-      "type": "VAEDecode",
-      "pos": [
-        4446.622125558031,
-        -684.4946881044434
-      ],
-      "size": [
-        140,
-        46
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 660
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 669
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            675
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "VAEDecode"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 436,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        4928.047528434213,
-        -704.1767319299918
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 661
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            704
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "SNOFSv1.3.safetensors",
-        0.5
-      ]
-    },
-    {
-      "id": 451,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        5233.388771502116,
-        -705.5219691186776
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 704
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            710
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.20.1",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "QWEN_WhatIsVagina.safetensors",
-        0.5
-      ]
-    },
-    {
-      "id": 431,
-      "type": "TextEncodeQwenImageEditPlus",
-      "pos": [
-        4642.700536872847,
-        -207.71921070975554
-      ],
-      "size": [
-        446.9208926943869,
-        251.2907725182606
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 665
-        },
-        {
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE",
-          "link": 667
-        },
-        {
-          "name": "image1",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 697
-        },
-        {
-          "name": "image2",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "image3",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            658
-          ]
-        }
-      ],
-      "title": "TextEncodeQwenImageEditPlus Negative (leave blank)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "TextEncodeQwenImageEditPlus"
-      },
-      "widgets_values": [
-        "different face, changed face, wrong face, altered face, deformed face, bad anatomy, low quality, blurry, artifacts, extra limbs、changed face, faces apart, no contact, mouths closed, tongue hidden, tongues not touching, separate faces, distant from each other, licking wrong body part"
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 449,
-      "type": "LoadImage",
-      "pos": [
-        3284.4527280776274,
-        -940.5345091623009
-      ],
-      "size": [
-        344,
-        314
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            695,
-            697,
-            698
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.18.2",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "ComfyUI_00006_.png",
-        "image"
-      ]
-    },
-    {
-      "id": 1,
-      "type": "CheckpointLoaderSimple",
-      "pos": [
-        3704.0303496093625,
-        -707.9118307480873
-      ],
-      "size": [
-        221.9,
-        98
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            668
-          ]
-        },
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            664,
-            665
-          ]
-        },
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": [
-            666,
-            667,
-            669
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "CheckpointLoaderSimple"
-      },
-      "widgets_values": [
-        "Qwen-Rapid-AIO-NSFW-v23.safetensors"
-      ]
-    },
-    {
-      "id": 443,
-      "type": "SaveImage",
-      "pos": [
-        5191.552249336821,
-        -470.06224566041857
-      ],
-      "size": [
-        365.24269457811533,
-        282
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 675
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.18.2"
-      },
-      "widgets_values": [
-        "Nude01"
-      ]
-    },
-    {
-      "id": 440,
-      "type": "TextEncodeQwenImageEditPlus",
-      "pos": [
-        4648.012767611884,
-        -562.6991585578007
-      ],
-      "size": [
-        451.0393930739341,
-        297.81540489946065
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 664
-        },
-        {
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE",
-          "link": 666
-        },
-        {
-          "name": "image1",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 695
-        },
-        {
-          "name": "image2",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "image3",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            657
-          ]
-        }
-      ],
-      "title": "TextEncodeQwenImageEditPlus Input Prompt",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.13.0",
-        "Node name for S&R": "TextEncodeQwenImageEditPlus"
-      },
-      "widgets_values": [
-        "服をドレスに変える"
-      ]
-    }
-  ],
-  "links": [
-    [
-      654,
-      432,
-      0,
-      433,
-      0,
-      "INT"
-    ],
-    [
-      655,
-      432,
-      1,
-      433,
-      1,
-      "INT"
-    ],
-    [
-      657,
-      440,
-      0,
-      434,
-      1,
-      "CONDITIONING"
-    ],
-    [
-      658,
-      431,
-      0,
-      434,
-      2,
-      "CONDITIONING"
-    ],
-    [
-      659,
-      433,
-      0,
-      434,
-      3,
-      "LATENT"
-    ],
-    [
-      660,
-      434,
-      0,
-      435,
-      0,
-      "LATENT"
-    ],
-    [
-      661,
-      438,
-      0,
-      436,
-      0,
-      "MODEL"
-    ],
-    [
-      664,
-      1,
-      1,
-      440,
-      0,
-      "CLIP"
-    ],
-    [
-      665,
-      1,
-      1,
-      431,
-      0,
-      "CLIP"
-    ],
-    [
-      666,
-      1,
-      2,
-      440,
-      1,
-      "VAE"
-    ],
-    [
-      667,
-      1,
-      2,
-      431,
-      1,
-      "VAE"
-    ],
-    [
-      668,
-      1,
-      0,
-      438,
-      0,
-      "MODEL"
-    ],
-    [
-      669,
-      1,
-      2,
-      435,
-      1,
-      "VAE"
-    ],
-    [
-      675,
-      435,
-      0,
-      443,
-      0,
-      "IMAGE"
-    ],
-    [
-      695,
-      449,
-      0,
-      440,
-      2,
-      "IMAGE"
-    ],
-    [
-      697,
-      449,
-      0,
-      431,
-      2,
-      "IMAGE"
-    ],
-    [
-      698,
-      449,
-      0,
-      432,
-      0,
-      "IMAGE"
-    ],
-    [
-      704,
-      436,
-      0,
-      451,
-      0,
-      "MODEL"
-    ],
-    [
-      710,
-      451,
-      0,
-      434,
-      0,
-      "MODEL"
-    ]
-  ],
-  "groups": [
-    {
-      "id": 23,
-      "title": "Group",
-      "bounding": [
-        4164.803752093727,
-        -780.3221302900502,
-        1604.9013428699,
-        840.0919984402047
-      ],
-      "color": "#3f789e",
-      "font_size": 24,
-      "flags": {}
-    }
-  ],
-  "config": {},
-  "extra": {
-    "ds": {
-      "scale": 0.7627768444385857,
-      "offset": [
-        -3573.0439744759037,
-        1014.6908587942075
-      ]
-    },
-    "ue_links": [],
-    "frontendVersion": "1.41.21",
-    "VHS_latentpreview": false,
-    "VHS_latentpreviewrate": 0,
-    "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true,
-    "workflowRendererVersion": "LG",
-    "linearData": {
-      "inputs": [],
-      "outputs": []
-    }
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": { "title": "チェックポイントを読み込む" }
   },
-  "version": 0.4
+  "431": {
+    "inputs": {
+      "prompt": "different face, changed face, wrong face, altered face, deformed face, bad anatomy, low quality, blurry, artifacts, extra limbs, faces apart, no contact, mouths closed, tongue hidden, tongues not touching, separate faces, distant from each other, licking wrong body part",
+      "clip": ["1", 1],
+      "vae": ["1", 2],
+      "image1": ["449", 0]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": { "title": "TextEncodeQwenImageEditPlus Negative" }
+  },
+  "432": {
+    "inputs": { "image": ["449", 0] },
+    "class_type": "GetImageSize",
+    "_meta": { "title": "画像サイズ取得" }
+  },
+  "433": {
+    "inputs": {
+      "width": ["432", 0],
+      "height": ["432", 1],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": { "title": "Final Image Size" }
+  },
+  "434": {
+    "inputs": {
+      "seed": 19,
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["900", 0],
+      "positive": ["440", 0],
+      "negative": ["431", 0],
+      "latent_image": ["433", 0]
+    },
+    "class_type": "KSampler",
+    "_meta": { "title": "Kサンプラー (SageAttention 2.x patched)" }
+  },
+  "435": {
+    "inputs": {
+      "samples": ["434", 0],
+      "vae": ["1", 2]
+    },
+    "class_type": "VAEDecode",
+    "_meta": { "title": "VAEデコード" }
+  },
+  "436": {
+    "inputs": {
+      "lora_name": "SNOFSv1.3.safetensors",
+      "strength_model": 0.5,
+      "model": ["438", 0]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": { "title": "LoRA: SNOFS" }
+  },
+  "438": {
+    "inputs": {
+      "lora_name": "QWEN_breastslider.safetensors",
+      "strength_model": -2,
+      "model": ["1", 0]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": { "title": "LoRA: breastslider" }
+  },
+  "440": {
+    "inputs": {
+      "prompt": "服をドレスに変える",
+      "clip": ["1", 1],
+      "vae": ["1", 2],
+      "image1": ["449", 0]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": { "title": "TextEncodeQwenImageEditPlus Positive" }
+  },
+  "443": {
+    "inputs": {
+      "filename_prefix": "Nude01",
+      "images": ["435", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "画像を保存" }
+  },
+  "449": {
+    "inputs": { "image": "ComfyUI_00006_.png" },
+    "class_type": "LoadImage",
+    "_meta": { "title": "画像を読み込む" }
+  },
+  "451": {
+    "inputs": {
+      "lora_name": "QWEN_WhatIsVagina.safetensors",
+      "strength_model": 0.5,
+      "model": ["436", 0]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": { "title": "LoRA: WhatIsVagina" }
+  },
+  "900": {
+    "inputs": {
+      "sage_attention": "sageattn_qk_int8_pv_fp16_cuda",
+      "model": ["451", 0]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": { "title": "Patch Sage Attention (CUDA backend, Qwen safe)" }
+  }
 }
