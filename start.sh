@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "=== Qwen-Rapid-AIO Serverless v10 (Plan B-5: Full SageAttention 2.x) ==="
+echo "=== Qwen-Rapid-AIO Serverless v12 (Plan B-5: Full Triton JIT Stack) ==="
 
 # Network Volume を /workspace としても参照できるようにする
 if [ -d /runpod-volume ] && [ ! -e /workspace ]; then
@@ -8,35 +8,34 @@ if [ -d /runpod-volume ] && [ ! -e /workspace ]; then
   echo "Linked /runpod-volume -> /workspace"
 fi
 
-# tcmalloc (メモリ管理改善)
+# tcmalloc
 TCMALLOC="$(ldconfig -p | grep -Po 'libtcmalloc.so.\d' | head -n 1)"
-if [ -n "$TCMALLOC" ]; then
-  export LD_PRELOAD="${TCMALLOC}"
-fi
+if [ -n "$TCMALLOC" ]; then export LD_PRELOAD="${TCMALLOC}"; fi
 
 # PyTorch メモリ断片化軽減
 export PYTORCH_ALLOC_CONF=expandable_segments:True
 
-# Triton JIT 用環境変数 (Dockerfileで設定済みだが念のため)
+# Triton JIT 必須環境変数
 export CC=${CC:-gcc}
 export CXX=${CXX:-g++}
 export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda}
 export PATH="/usr/local/cuda/bin:${PATH}"
 export LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}"
 
-# 環境確認
-echo "--- Runtime environment check ---"
-which nvcc && nvcc --version | tail -1 || echo "WARNING: nvcc not found"
-which gcc && gcc --version | head -1 || echo "WARNING: gcc not found"
+# === Runtime 依存 チェック (起動時にひと目で確認) ===
+echo "--- Triton JIT runtime check ---"
+which gcc && gcc --version | head -1
+which nvcc && nvcc --version | tail -1
+[ -f /usr/include/python3.12/Python.h ] && echo "✓ Python.h found" || echo "✗ MISSING Python.h"
+ldconfig -p | grep -q libcuda.so && echo "✓ libcuda.so available" || echo "⚠ libcuda.so check (RunPod runtime mount expected)"
 
-# SageAttention 動作確認
-python3 -c "from sageattention import sageattn_qk_int8_pv_fp16_cuda; print('SageAttention 2.x ready')" \
-  || echo "WARNING: SageAttention 2.x not available"
+# Triton & SageAttention import チェック
+python3 -c "import triton; print('✓ Triton', triton.__version__)" || echo "✗ Triton import failed"
+python3 -c "from sageattention import sageattn_qk_int8_pv_fp16_cuda; print('✓ SageAttention 2.x ready')" || echo "✗ SageAttention not available"
+echo "--- check complete ---"
 
 # ComfyUI 起動
-# --highvram / --disable-smart-memory は使わない (OOM回避)
-# SageAttention は KJNodes Patch Sage Attention ノード経由で適用
-echo "worker-comfyui: Starting ComfyUI (--fast only, smart VRAM management)"
+echo "worker-comfyui: Starting ComfyUI (--fast only)"
 python3 -u /comfyui/main.py \
   --disable-auto-launch \
   --disable-metadata \

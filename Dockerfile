@@ -1,10 +1,10 @@
 # ============================================================================
-# Qwen-Rapid-AIO Serverless v10 - Plan B-5 (SageAttention 2.x Full Runtime)
+# Qwen-Rapid-AIO Serverless v12 (Plan B-5 - Full Triton JIT Dependencies)
 #
-# 教訓: SageAttention 2.x は ランタイムに Triton JIT を使う
-#       Triton JIT は gcc + nvcc を要求するため main image に CUDA Toolkit を COPY
+# v11 → v12 変更点:
+#   - Triton JIT 用全依存を網羅的に追加 (繰り返し失敗を避けるため)
+#   - Build時の動作確認を強化 (Python.h, nvcc, Triton import, libcuda)
 #
-# イメージサイズ: 約 22-25 GB (CUDA Toolkit 約6GB 追加)
 # 期待効果: RTX 4090 で 60-90 秒/枚
 # ============================================================================
 
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git build-essential ninja-build curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-RUN nvcc --version && python3 --version && python3 -m pip --version
+RUN nvcc --version && python3 --version
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir \
         torch==2.10.0 \
@@ -29,7 +29,6 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir \
 RUN python3 -m pip install --break-system-packages --no-cache-dir \
         numpy "setuptools<=75.8.2" wheel packaging ninja
 
-# SageAttention 2.x ビルド (RTX 4090 = sm_89)
 RUN git clone --depth=1 https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
  && cd /tmp/SageAttention \
  && export TORCH_CUDA_ARCH_LIST="8.9" \
@@ -41,18 +40,39 @@ RUN git clone --depth=1 https://github.com/thu-ml/SageAttention.git /tmp/SageAtt
  && echo "=== Built SageAttention wheel ==="
 
 # =============================================================================
-# Stage 2: メインイメージ + CUDA Toolkit + SageAttention runtime
+# Stage 2: メインイメージ + 全 Triton JIT 依存
 # =============================================================================
 FROM runpod/worker-comfyui:5.8.5-base-cuda12.8.1
 
-# ----- Step 1: Triton JIT 用 C コンパイラ追加 -----
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ----- Step 1: Triton JIT 必須依存を網羅的にインストール -----
+# gcc/g++:        Cコンパイラ (Triton JIT が cuda_utils.c をコンパイル)
+# python3-dev:    /usr/include/python3.12/Python.h を提供
+# libpython3-dev: libpython3.so 提供 (リンカーが要求)
+# make/pkg-config: ビルドツール (一部のJITコンパイル用)
+# zlib1g-dev:     Triton キャッシュ圧縮用
+# libtinfo-dev:   LLVM 依存
+# binutils:       ld/ar リンカー
+# libssl-dev:     SSL (pip ビルド時に念のため)
+# ca-certificates: HTTPS 証明書
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc g++ \
- && rm -rf /var/lib/apt/lists/* \
- && gcc --version
+        python3-dev libpython3-dev \
+        make pkg-config \
+        zlib1g-dev libtinfo-dev \
+        binutils libssl-dev \
+        ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
-# ----- Step 2: CUDA Toolkit (nvcc等) を Stage 1 から丸ごとコピー -----
-# Triton JIT がランタイムで nvcc を呼ぶため必須
+# Build時の依存確認 (早期失敗検出)
+RUN gcc --version | head -1 \
+ && g++ --version | head -1 \
+ && ls -la /usr/include/python3.12/Python.h \
+ && ldconfig -p | grep -E "libpython3.12|libcuda|libcudart" | head -5 \
+ && echo "✓ Step 1: All apt deps verified"
+
+# ----- Step 2: CUDA Toolkit (nvcc) を Stage 1 から COPY -----
 COPY --from=sage-builder /usr/local/cuda /usr/local/cuda
 
 # CUDA 環境変数
@@ -62,18 +82,26 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV CC=gcc
 ENV CXX=g++
 
-# nvcc/gcc 動作確認 (Build時の早期失敗検出)
-RUN nvcc --version && gcc --version | head -1
+# nvcc 動作確認
+RUN nvcc --version | tail -1 \
+ && which nvcc \
+ && ls /usr/local/cuda/bin/nvcc \
+ && echo "✓ Step 2: CUDA Toolkit verified"
 
-# ----- Step 3: Triton 最新版 -----
-RUN pip install --break-system-packages --no-cache-dir -U triton
+# ----- Step 3: Triton 最新版 + import 動作確認 -----
+RUN pip install --break-system-packages --no-cache-dir -U triton \
+ && python3 -c "import triton; print('Triton version:', triton.__version__)" \
+ && ls /opt/venv/lib/python3.12/site-packages/triton/backends/nvidia/lib/ \
+ && ls /opt/venv/lib/python3.12/site-packages/triton/backends/nvidia/include/ \
+ && echo "✓ Step 3: Triton installed & verified"
 
 # ----- Step 4: SageAttention wheel を Stage 1 から COPY & インストール -----
 COPY --from=sage-builder /tmp/SageAttention/dist/*.whl /tmp/
 RUN ls /tmp/*.whl \
  && pip install --break-system-packages --no-cache-dir /tmp/sageattention*.whl \
  && rm /tmp/sageattention*.whl \
- && python3 -c "from sageattention import sageattn_qk_int8_pv_fp16_cuda; print('SageAttention 2.x OK')"
+ && python3 -c "from sageattention import sageattn_qk_int8_pv_fp16_cuda; print('SageAttention 2.x OK')" \
+ && echo "✓ Step 4: SageAttention installed & verified"
 
 # ----- Step 5: ComfyUI-KJNodes (Patch Sage Attention ノード提供) -----
 RUN git clone --depth=1 https://github.com/kijai/ComfyUI-KJNodes.git \
@@ -81,7 +109,8 @@ RUN git clone --depth=1 https://github.com/kijai/ComfyUI-KJNodes.git \
  && if [ -f /comfyui/custom_nodes/ComfyUI-KJNodes/requirements.txt ]; then \
         pip install --break-system-packages --no-cache-dir \
             -r /comfyui/custom_nodes/ComfyUI-KJNodes/requirements.txt; \
-    fi
+    fi \
+ && echo "✓ Step 5: ComfyUI-KJNodes installed"
 
 # ----- Step 6: Comfyui-QwenEditUtils -----
 RUN git clone --depth=1 https://github.com/lrzjason/Comfyui-QwenEditUtils.git \
@@ -89,9 +118,10 @@ RUN git clone --depth=1 https://github.com/lrzjason/Comfyui-QwenEditUtils.git \
  && if [ -f /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt ]; then \
         pip install --break-system-packages --no-cache-dir \
             -r /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt; \
-    fi
+    fi \
+ && echo "✓ Step 6: Comfyui-QwenEditUtils installed"
 
-# ----- Step 7: モデルパス、ワークフロー、起動スクリプト -----
+# ----- Step 7: モデルパス、ワークフロー -----
 COPY extra_model_paths.yaml /comfyui/extra_model_paths.yaml
 COPY workflow_api.json      /comfyui/workflow_api.json
 
@@ -99,3 +129,10 @@ COPY workflow_api.json      /comfyui/workflow_api.json
 RUN if [ -f /start.sh ]; then mv /start.sh /start_original.sh; fi
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
+
+# 最終Build確認
+RUN echo "=== Final verification ===" \
+ && gcc --version | head -1 \
+ && nvcc --version | tail -1 \
+ && python3 -c "import triton; import sageattention; print('All systems go')" \
+ && echo "✓ v12 Build complete"
