@@ -3,6 +3,16 @@
 # ベース：公式 worker-comfyui 5.8.5 / CUDA 12.8.1（cu128環境に整合）
 FROM runpod/worker-comfyui:5.8.5-base-cuda12.8.1
 
+# ===== 高速化最適化追加 =====
+# SageAttention（35-40%短縮、DaSiWa Batch実績あり）
+RUN pip install --break-system-packages --no-cache-dir sageattention
+
+# Triton 最新版
+RUN pip install --break-system-packages --no-cache-dir -U triton
+
+# ComfyUI 起動オプション
+ENV COMFY_ARGS="--use-sage-attention --fast --highvram --disable-smart-memory"
+
 # === カスタムノード：Comfyui-QwenEditUtils ===
 RUN git clone --depth=1 https://github.com/lrzjason/Comfyui-QwenEditUtils.git \
       /comfyui/custom_nodes/Comfyui-QwenEditUtils \
