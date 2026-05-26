@@ -1,8 +1,6 @@
 {
   "1": {
-    "inputs": {
-      "ckpt_name": "Qwen-Rapid-AIO-NSFW-v23.safetensors"
-    },
+    "inputs": { "ckpt_name": "Qwen-Rapid-AIO-NSFW-v23.safetensors" },
     "class_type": "CheckpointLoaderSimple",
     "_meta": { "title": "チェックポイントを読み込む" }
   },
@@ -32,12 +30,8 @@
   },
   "434": {
     "inputs": {
-      "seed": 19,
-      "steps": 6,
-      "cfg": 1,
-      "sampler_name": "euler_ancestral",
-      "scheduler": "simple",
-      "denoise": 1,
+      "seed": 19, "steps": 6, "cfg": 1,
+      "sampler_name": "euler_ancestral", "scheduler": "simple", "denoise": 1,
       "model": ["900", 0],
       "positive": ["440", 0],
       "negative": ["431", 0],
@@ -47,10 +41,7 @@
     "_meta": { "title": "Kサンプラー (SageAttention 2.x patched)" }
   },
   "435": {
-    "inputs": {
-      "samples": ["434", 0],
-      "vae": ["1", 2]
-    },
+    "inputs": { "samples": ["434", 0], "vae": ["1", 2] },
     "class_type": "VAEDecode",
     "_meta": { "title": "VAEデコード" }
   },
@@ -83,10 +74,7 @@
     "_meta": { "title": "TextEncodeQwenImageEditPlus Positive" }
   },
   "443": {
-    "inputs": {
-      "filename_prefix": "Nude01",
-      "images": ["435", 0]
-    },
+    "inputs": { "filename_prefix": "Nude01", "images": ["435", 0] },
     "class_type": "SaveImage",
     "_meta": { "title": "画像を保存" }
   },
