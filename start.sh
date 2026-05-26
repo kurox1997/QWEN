@@ -1,3 +1,4 @@
+#Saisin
 #!/bin/bash
 set -e
 echo "=== Qwen-Rapid-AIO Serverless v3 (SageAttention 2.x + KJNodes Patch) ==="
