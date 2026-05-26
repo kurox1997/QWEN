@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "=== Qwen-Rapid-AIO Serverless v12 (Plan B-5: Full Triton JIT Stack) ==="
+echo "=== Qwen-Rapid-AIO Serverless v14 (Lightweight & Fast Start) ==="
 
 # Network Volume を /workspace としても参照できるようにする
 if [ -d /runpod-volume ] && [ ! -e /workspace ]; then
@@ -8,34 +8,24 @@ if [ -d /runpod-volume ] && [ ! -e /workspace ]; then
   echo "Linked /runpod-volume -> /workspace"
 fi
 
-# tcmalloc
+# tcmalloc (メモリ管理改善)
 TCMALLOC="$(ldconfig -p | grep -Po 'libtcmalloc.so.\d' | head -n 1)"
-if [ -n "$TCMALLOC" ]; then export LD_PRELOAD="${TCMALLOC}"; fi
+if [ -n "$TCMALLOC" ]; then
+  export LD_PRELOAD="${TCMALLOC}"
+fi
 
-# PyTorch メモリ断片化軽減
+# PyTorch メモリ断片化軽減 (OOM対策)
 export PYTORCH_ALLOC_CONF=expandable_segments:True
 
-# Triton JIT 必須環境変数
-export CC=${CC:-gcc}
-export CXX=${CXX:-g++}
-export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda}
-export PATH="/usr/local/cuda/bin:${PATH}"
-export LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}"
-
-# === Runtime 依存 チェック (起動時にひと目で確認) ===
-echo "--- Triton JIT runtime check ---"
-which gcc && gcc --version | head -1
-which nvcc && nvcc --version | tail -1
-[ -f /usr/include/python3.12/Python.h ] && echo "✓ Python.h found" || echo "✗ MISSING Python.h"
-ldconfig -p | grep -q libcuda.so && echo "✓ libcuda.so available" || echo "⚠ libcuda.so check (RunPod runtime mount expected)"
-
-# Triton & SageAttention import チェック
-python3 -c "import triton; print('✓ Triton', triton.__version__)" || echo "✗ Triton import failed"
-python3 -c "from sageattention import sageattn_qk_int8_pv_fp16_cuda; print('✓ SageAttention 2.x ready')" || echo "✗ SageAttention not available"
-echo "--- check complete ---"
+# 環境表示 (確認用)
+echo "ENV: COMFY_POLLING_MAX_RETRIES=${COMFY_POLLING_MAX_RETRIES}"
+echo "ENV: TRANSFORMERS_OFFLINE=${TRANSFORMERS_OFFLINE}"
+echo "ENV: PYTORCH_ALLOC_CONF=${PYTORCH_ALLOC_CONF}"
 
 # ComfyUI 起動
-echo "worker-comfyui: Starting ComfyUI (--fast only)"
+# --fast: FP16 accumulation (10-20%高速化)
+# (SageAttention は使わない、 Qwen Image でノイズ問題のため)
+echo "worker-comfyui: Starting ComfyUI (--fast, pytorch SDPA attention)"
 python3 -u /comfyui/main.py \
   --disable-auto-launch \
   --disable-metadata \
