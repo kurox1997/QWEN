@@ -1,0 +1,7 @@
+runpod_worker_comfy:
+  base_path: /runpod-volume/
+  checkpoints: models/checkpoints/
+  loras: models/loras/
+  vae: models/vae/
+  embeddings: models/embeddings/
+  # 必要に応じて他のフォルダも追加可能
