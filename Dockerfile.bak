@@ -1,0 +1,51 @@
+﻿FROM runpod/worker-comfyui:5.8.5-base-cuda12.8.1
+
+# SageAttention（35-40%短縮、DaSiWa Batch実績あり）
+RUN pip install --break-system-packages --no-cache-dir sageattention
+
+# Triton 最新版
+RUN pip install --break-system-packages --no-cache-dir -U triton
+
+# Qwen Image Edit Plus 用 カスタムノード
+RUN git clone --depth=1 https://github.com/lrzjason/Comfyui-QwenEditUtils.git \
+        /comfyui/custom_nodes/Comfyui-QwenEditUtils \
+    && if [ -f /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt ]; then \
+           pip install --no-cache-dir -r /comfyui/custom_nodes/Comfyui-QwenEditUtils/requirements.txt; \
+       fi
+
+# モデルパス
+COPY extra_model_paths.yaml /comfyui/extra_model_paths.yaml
+COPY workflow_api.json      /comfyui/workflow_api.json
+
+# ===== start.sh を完全書き換え：ComfyUI に最適化フラグを直接渡す =====
+RUN if [ -f /start.sh ]; then mv /start.sh /start_original.sh; fi \
+ && cat > /start.sh <<'STARTSH'
+#!/bin/bash
+set -e
+echo "=== Qwen-Rapid-AIO Serverless Starting (Optimized) ==="
+
+# Network Volume を /workspace としても参照できるようにする
+if [ -d /runpod-volume ] && [ ! -e /workspace ]; then
+  ln -s /runpod-volume /workspace
+  echo "Linked /runpod-volume -> /workspace"
+fi
+
+# tcmalloc（メモリ管理改善）
+TCMALLOC="$(ldconfig -p | grep -Po 'libtcmalloc.so.\d' | head -n 1)"
+if [ -n "$TCMALLOC" ]; then export LD_PRELOAD="${TCMALLOC}"; fi
+
+# ComfyUI 起動（SageAttention + 最適化フラグ）
+echo "worker-comfyui: Starting ComfyUI with --use-sage-attention --fast --highvram --disable-smart-memory"
+python3 -u /comfyui/main.py \
+  --disable-auto-launch \
+  --disable-metadata \
+  --use-sage-attention \
+  --fast \
+  --highvram \
+  --disable-smart-memory &
+
+# RunPod Handler 起動
+echo "worker-comfyui: Starting RunPod Handler"
+exec python3 -u /handler.py
+STARTSH
+RUN chmod +x /start.sh
