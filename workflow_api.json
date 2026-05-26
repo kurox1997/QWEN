@@ -32,13 +32,13 @@
     "inputs": {
       "seed": 19, "steps": 6, "cfg": 1,
       "sampler_name": "euler_ancestral", "scheduler": "simple", "denoise": 1,
-      "model": ["900", 0],
+      "model": ["451", 0],
       "positive": ["440", 0],
       "negative": ["431", 0],
       "latent_image": ["433", 0]
     },
     "class_type": "KSampler",
-    "_meta": { "title": "Kサンプラー (SageAttention 2.x patched)" }
+    "_meta": { "title": "Kサンプラー (pytorch attention, SageAttention抜き)" }
   },
   "435": {
     "inputs": { "samples": ["434", 0], "vae": ["1", 2] },
@@ -91,13 +91,5 @@
     },
     "class_type": "LoraLoaderModelOnly",
     "_meta": { "title": "LoRA: WhatIsVagina" }
-  },
-  "900": {
-    "inputs": {
-      "sage_attention": "sageattn_qk_int8_pv_fp16_cuda",
-      "model": ["451", 0]
-    },
-    "class_type": "PathchSageAttentionKJ",
-    "_meta": { "title": "Patch Sage Attention (CUDA backend, Qwen safe)" }
   }
 }
