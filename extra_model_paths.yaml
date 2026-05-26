@@ -1,7 +1,15 @@
-runpod_worker_comfy:
-  base_path: /runpod-volume/
-  checkpoints: models/checkpoints/
-  loras: models/loras/
-  vae: models/vae/
-  embeddings: models/embeddings/
-  # 必要に応じて他のフォルダも追加可能
+﻿# ============================================================================
+# Network Volume上のモデルパス定義
+# Serverless時: /runpod-volume/runpod-slim/ComfyUI/models/
+# ============================================================================
+
+runpod_network_volume:
+    base_path: /runpod-volume/runpod-slim/ComfyUI/
+    checkpoints: models/checkpoints/
+    vae: models/vae/
+    loras: models/loras/
+    clip: models/clip/
+    clip_vision: models/clip_vision/
+    controlnet: models/controlnet/
+    upscale_models: models/upscale_models/
+    embeddings: models/embeddings/
